@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>West Star Breed Log</title>
+<meta name="theme-color" content="#f2c200">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --fg:#1d221f; --muted:#5d6660; --line:#d9ddd6;
+  --tag:#f2c200; --tag-ink:#1d221f; --ok:#2f7d4f; --ok-bg:#e1f0e6; --warn:#a65f00; --warn-bg:#fbefd9; --bad:#b3362c;
+  --sx:#2c5a8c; --an:#3b3b3b;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141715; --surface:#1e2220; --fg:#eef0ec; --muted:#a3aba5; --line:#333a36;
+  --tag:#f2c200; --tag-ink:#141715; --ok:#6cc48f; --ok-bg:#1d3326; --warn:#f0b35a; --warn-bg:#3a2c14; --bad:#f08a80;
+  --sx:#8fb6e3; --an:#c9c9c9; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 110px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--tag);outline-offset:2px}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:12px 8px;border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;flex:1;min-width:0}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:.9rem}
+.chip.tech{background:var(--tag);color:var(--tag-ink);border-color:var(--tag)}
+.prog{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.sync{margin-top:8px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:8px 12px;font-weight:600;font-size:.9rem}
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tabs button{flex:1;border:0;background:transparent;padding:10px 4px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--tag)}
+.tools{display:flex;gap:8px;margin-block:12px;flex-wrap:wrap}
+.tools input{flex:1;min-width:140px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:1.1rem}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:10px 12px;font-weight:600;font-size:.9rem}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.pen{font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
+.sides{display:flex;gap:6px;margin-top:10px}
+.sides button{flex:1;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 6px;font-family:var(--display);font-weight:700;font-size:1.25rem;letter-spacing:.06em;text-transform:uppercase}
+.sides button[aria-pressed="true"]{background:var(--tag);border-color:var(--tag);color:var(--tag-ink)}
+.penh{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left}
+.penh .pn{font-family:var(--display);font-weight:700;font-size:1.5rem;letter-spacing:.04em;text-transform:uppercase;flex:1}
+.penh .pc{font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.penh .pm{width:36px;height:36px;border-radius:999px;background:var(--tag);color:var(--tag-ink);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;line-height:1}
+.penh.open .pm{background:var(--fg);color:var(--bg)}
+.penh.clear .pc{color:var(--ok)}
+.pen-list{margin-top:6px}
+.list{display:flex;flex-direction:column;gap:6px}
+.cow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-height:64px}
+.cow .id{font-family:var(--display);font-weight:700;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
+.cow .meta{font-size:1.05rem;font-weight:600;color:var(--fg);margin-top:4px;font-variant-numeric:tabular-nums}
+.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.b{font-size:.75rem;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:6px;border:1px solid currentColor;white-space:nowrap}
+.b.tmai{background:var(--tag);color:var(--tag-ink);border-color:var(--tag)}
+.b.heat{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.b.sx{color:var(--sx)} .b.an{color:var(--an)}
+.b.ok{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.b.skip{color:var(--muted)}
+.b.wait{color:var(--warn)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:20px;color:var(--muted);text-align:center;margin-top:16px}
+.add{position:fixed;z-index:6;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));max-width:608px;margin:0 auto;padding:16px;border-radius:14px;border:0;background:var(--tag);color:var(--tag-ink);font-weight:700;font-size:1.1rem;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.addq{width:100%;margin-top:12px;padding:16px;border-radius:12px;border:2px solid var(--tag);background:var(--surface);font-weight:700;font-size:1.1rem}
+.note{font-size:.9rem;color:var(--muted)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:18px 18px 0 0;max-height:92%;overflow:auto;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet .in{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.sh-top{display:flex;align-items:flex-start;gap:10px}
+.sh-id{font-family:var(--display);font-weight:700;font-size:3.2rem;line-height:.95;font-variant-numeric:tabular-nums}
+.sh-meta{font-size:1.2rem;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums}
+.x{border:0;background:var(--bg);border-radius:999px;width:40px;height:40px;font-size:1.3rem;margin-left:auto}
+.lbl{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sires{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.sire{border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:12px;text-align:left;min-height:64px}
+.sire b{display:block;font-family:var(--display);font-size:1.35rem;letter-spacing:.02em}
+.sire span{font-size:.75rem;color:var(--muted);font-weight:600;letter-spacing:.06em}
+.sire[aria-pressed="true"]{border-color:var(--tag);background:var(--tag);color:var(--tag-ink)}
+.sire[aria-pressed="true"] span{color:var(--tag-ink)}
+.txt{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:1.1rem;text-transform:uppercase}
+.codes{display:flex;gap:8px}
+.codes button{flex:1;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:12px;font-weight:600}
+.codes button b{font-family:var(--display);font-size:1.5rem;display:block}
+.codes button[aria-pressed="true"]{border-color:var(--fg);background:var(--fg);color:var(--bg)}
+.save{border:0;border-radius:14px;padding:18px;font-size:1.2rem;font-weight:700;background:var(--ok);color:#fff}
+.save:disabled{opacity:.4}
+.ghost{border:2px solid var(--line);background:transparent;border-radius:12px;padding:14px;font-weight:700;font-size:1.05rem}
+.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-weight:600;font-size:.95rem}
+.techs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.techs button{border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:16px;font-weight:700;font-size:1.1rem}
+.techs button small{display:block;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.card h2{font-family:var(--display);font-size:1.3rem;margin:0}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;background:var(--fg);color:var(--bg)}
+.btn.alt{background:var(--bg);color:var(--fg);border:1px solid var(--line)}
+textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;font-family:ui-monospace,monospace;font-size:.8rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast button{border:0;background:transparent;color:var(--tag);font-weight:700}
+.gate{max-width:360px;margin:15vh auto 0;display:flex;flex-direction:column;gap:14px;text-align:center}
+.gate input{font-size:2rem;text-align:center;letter-spacing:.3em;text-transform:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" hidden>
+<header>
+  <div class="hrow">
+    <h1>Breed Log</h1>
+    <button class="chip" id="qrBtn">QR</button>
+    <button class="chip" id="langBtn">ES</button>
+    <button class="chip tech" id="techBtn">Tech</button>
+  </div>
+  <div class="prog"><span id="dateLbl"></span><div class="bar"><i id="barFill"></i></div><span id="progLbl">0 / 0</span></div>
+  <div class="sync" id="syncLbl" hidden></div>
+  <div class="sides" id="sides">
+    <button data-side="N" aria-pressed="false">North</button>
+    <button data-side="S" aria-pressed="false">South</button>
+    <button data-side="all" aria-pressed="true">All</button>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-breed" aria-selected="true" data-v="breed">To breed</button>
+    <button role="tab" id="tab-done" aria-selected="false" data-v="done">Done</button>
+    <button role="tab" id="tab-office" aria-selected="false" data-v="office">Office</button>
+  </div>
+</header>
+
+<main id="view-breed">
+  <div class="tools">
+    <input id="search" inputmode="numeric" placeholder="Find cow #" autocomplete="off">
+    <div class="seg" id="filter">
+      <button data-f="all" aria-pressed="true">All</button>
+      <button data-f="TMAI" aria-pressed="false">Timed AI</button>
+      <button data-f="HEAT" aria-pressed="false">Heat</button>
+    </div>
+  </div>
+  <div id="cowList"></div>
+  <button class="add" id="addBtn">+ Cow not on list</button>
+</main>
+
+<main id="view-done" hidden><div id="doneList"></div></main>
+
+<main id="view-office" hidden>
+  <div class="card" id="officeGate">
+    <h2>Office</h2>
+    <p class="note" style="margin:0">Enter the office PIN to see the day's breedings and load the sort list.</p>
+    <div class="row"><input id="opinIn" class="txt" type="password" inputmode="numeric" style="flex:1;min-width:120px;text-transform:none"><button class="btn" id="opinGo">Unlock</button></div>
+    <div class="note" id="opinMsg"></div>
+  </div>
+  <div id="officeBody" hidden>
+    <div class="card">
+      <h2 id="o-sum-h">Today's breedings</h2>
+      <div class="row"><label class="note" for="oDate">Day</label><input type="date" id="oDate" class="txt" style="width:auto;text-transform:none"></div>
+      <div class="tbl"><table id="oTable"></table></div>
+      <div class="row"><button class="btn" id="copyCsv">Copy for DC305</button></div>
+      <textarea id="csvBox" hidden readonly></textarea>
+    </div>
+    <div class="card">
+      <h2>Load the morning sort list</h2>
+      <p class="note" style="margin:0">Upload the SORTLT PDF from DairyComp. Cows with TMAI + S and NOTREAT + – become today's list. Loading again replaces the list but keeps breedings already recorded.</p>
+      <input type="file" id="pdfIn" accept="application/pdf">
+      <details><summary class="note">Or paste the list as text</summary><textarea id="pasteIn" placeholder="Paste SORTLT text here"></textarea><button class="btn alt" id="pasteGo" style="margin-top:8px">Load pasted text</button></details>
+      <div class="note" id="loadStatus"></div>
+    </div>
+    <div class="card">
+      <h2>Angus sires</h2>
+      <p class="note" style="margin:0">Quick-pick buttons for AN cows. Breeders can still type any sire.</p>
+      <div class="row" id="angusRow"></div>
+      <div class="row"><input id="angusIn" class="txt" style="flex:1;min-width:120px" placeholder="Sire code"><button class="btn" id="angusAdd">Add</button></div>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="gate" id="pinGate" hidden>
+  <h1 style="font-size:2.2rem">West Star Breed Log</h1>
+  <div class="lbl" id="pinTitle">Enter PIN</div>
+  <input id="pinIn" class="txt" type="password" inputmode="numeric" autocomplete="off">
+  <button class="save" id="pinGo">OK</button>
+  <div class="note" id="pinMsg"></div>
+</div>
+
+<div id="sheetRoot" hidden></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+const TECHS=[["R","Rey"],["MH","Mario"],["CH","Chavelo"],["MJ","Mario Jr"],["JR","Juan"]];
+const T={
+ en:{toBreed:"To breed",done:"Done",office:"Office",find:"Find cow #",all:"All",tmai:"Timed AI",heat:"Heat",notOn:"+ Cow not on list",
+   pen:"Pen",sire:"Sire",other:"Other sire — type it",code:"Breeding code",ov:"Ovsynch",nh:"Natural heat",save:"Save breeding",
+   skip:"NO HEAT",who:"Who is breeding?",skipped:"NO HEAT",undo:"Undo",saved:"Saved",
+   noList:"Today's list isn't loaded yet. Ask the office to load the sort list. You can still add cows with “Cow not on list”.",
+   noDone:"No breedings recorded yet today.",cowNum:"Cow number",notFound:"Not on today's sort list. Check the number before saving.",
+   allDone:"Every cow on the list is done.",angusPick:"Angus sire",dim:"DIM",tb:"times bred",loading:"Loading…",
+   breedX:"Breed cow",onSort:"Not on the breeding list, but on today's sort list —",
+   waiting:"waiting to send. They will send when there is signal.",noSignal:"No signal. Breedings are saved on this phone and will send later.",
+   pinTitle:"Enter PIN",wrongPin:"Wrong PIN.",next:"Next",north:"North",south:"South",offNoList:"No signal, and today's list hasn't downloaded to this phone yet. Open the app once where there is signal. You can still add cows with “Cow not on list” — they save on the phone.",left:"left",doneAll:"done",noSide:"No cows to breed on this side today."},
+ es:{toBreed:"Por inseminar",done:"Hechas",office:"Oficina",find:"Buscar vaca #",all:"Todas",tmai:"IATF",heat:"Celo",notOn:"+ Vaca fuera de lista",
+   pen:"Corral",sire:"Toro",other:"Otro toro — escríbalo",code:"Código",ov:"Ovsynch",nh:"Celo natural",save:"Guardar",
+   skip:"NO HEAT — sin celo",who:"¿Quién insemina?",skipped:"NO HEAT",undo:"Deshacer",saved:"Guardado",
+   noList:"La lista de hoy no está cargada. Pida a la oficina que la cargue. Puede agregar vacas con “Vaca fuera de lista”.",
+   noDone:"Todavía no hay inseminaciones hoy.",cowNum:"Número de vaca",notFound:"No está en la lista de hoy. Revise el número antes de guardar.",
+   allDone:"Todas las vacas de la lista están hechas.",angusPick:"Toro Angus",dim:"DEL",tb:"servicios",loading:"Cargando…",
+   breedX:"Inseminar vaca",onSort:"No está en la lista para inseminar, pero sí en la lista de hoy —",
+   waiting:"pendientes de enviar. Se enviarán cuando haya señal.",noSignal:"Sin señal. Las inseminaciones se guardan en el teléfono y se enviarán después.",
+   pinTitle:"Ingrese el PIN",wrongPin:"PIN incorrecto.",next:"Siguiente",north:"Norte",south:"Sur",offNoList:"Sin señal y la lista de hoy no se ha descargado en este teléfono. Abra la app una vez donde haya señal. Puede agregar vacas con “Vaca fuera de lista” — se guardan en el teléfono.",left:"pendientes",doneAll:"listo",noSide:"No hay vacas para inseminar en este lado hoy."}
+};
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const S={lang:ls.get("lang")||"en",tech:ls.get("tech"),view:"breed",filter:"all",q:"",cows:[],known:[],angus:[],listDate:"",server:{},breedings:{},loaded:false,online:true,officeDate:null,officeRows:[]};
+let PIN=ls.get("pin")||"", OPIN=ls.get("opin")||"";
+S.side=ls.get("side")||"all";
+let OPEN=new Set();try{const o=JSON.parse(ls.get("openPens")||"null");if(o&&o.date===today())OPEN=new Set(o.pens)}catch(e){}
+function saveOpen(){ls.set("openPens",JSON.stringify({date:TODAY,pens:[...OPEN]}))}
+function onSide(pen){if(S.side==="N")return pen!=null&&pen<=10;if(S.side==="S")return pen!=null&&pen>=11;return true}
+let queue=[];try{queue=JSON.parse(ls.get("queue")||"[]")}catch(e){queue=[]}
+const $=id=>document.getElementById(id);
+const t=k=>T[S.lang][k]||T.en[k];
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+let TODAY=today();
+function fmtDate(s){const [y,m,d]=s.split("-");return m+"/"+d+"/"+y.slice(2)}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const API="https://script.google.com/macros/s/AKfycbw9RB-kW93GcvYnvb2a49ZQ3G4XlEV10nBKHKa3SlPly_2EZxOiD-XHlF97H-dX44K5/exec";
+function call(fn,...args){const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),20000);
+  return fetch(API,{method:"POST",body:JSON.stringify({fn,args}),headers:{"Content-Type":"text/plain;charset=utf-8"},signal:ac.signal,redirect:"follow"})
+    .then(r=>r.json()).then(j=>{if(!j.ok)throw new Error(j.error||"ERR");return j.result}).finally(()=>clearTimeout(tm))}
+function errCode(e){return String((e&&e.message)||e||"")}
+let toastTimer;
+function toast(msg,action){const el=$("toast");el.innerHTML="<span>"+esc(msg)+"</span>";if(action){const b=document.createElement("button");b.textContent=action.label;b.onclick=()=>{el.hidden=true;action.fn()};el.appendChild(b)}el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,action?6000:2500)}
+
+/* ---------- sort list parsing ---------- */
+function parseSort(text){
+  const re=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+([S-])\s+(\d+)\s+(\S+)\s+(\d+)\b/;
+  const all=[];
+  for(const line of text.split(/\r?\n/)){const m=line.match(re);if(!m)continue;
+    all.push({pen:+m[1],tbrd:+m[3],dslh:+m[4],soc:m[5],sir1:m[6],sir2:m[7],sorts:m[9],dim:+m[10],sdesc:m[11],id:m[12]})}
+  const cows=all.filter(r=>(r.sdesc==="TMAI"&&r.sorts==="S")||(r.sdesc==="NOTREAT"&&r.sorts==="-")).map(r=>({
+    id:r.id,pen:r.pen,soc:r.soc,sir1:r.sir1,sir2:r.sir2,dim:r.dim,tbrd:r.tbrd,dslh:r.dslh,type:r.sdesc==="TMAI"?"TMAI":"HEAT",code:r.sdesc==="TMAI"?"O":"H"}));
+  const known=all.map(r=>[r.id,r.pen,r.soc,r.sir1,r.sir2]);
+  return {cows,known,total:all.length};
+}
+async function pdfToText(buf){
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;const out=[];
+  for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const tc=await page.getTextContent();const rows=new Map();
+    for(const it of tc.items){if(!it.str.trim())continue;const y=Math.round(it.transform[5]/2)*2;if(!rows.has(y))rows.set(y,[]);rows.get(y).push(it)}
+    [...rows.keys()].sort((a,b)=>b-a).forEach(y=>out.push(rows.get(y).sort((a,b)=>a.transform[4]-b.transform[4]).map(i=>i.str).join(" ")));}
+  return out.join("\n");
+}
+
+/* ---------- data sync ---------- */
+function saveQueue(){ls.set("queue",JSON.stringify(queue))}
+function applyQueue(){
+  S.breedings=Object.assign({},S.server);
+  for(const e of queue){if(e.date!==TODAY)continue;
+    if(e.action==="save")S.breedings[e.cow]=Object.assign({pending:true},e);
+    else if(e.action==="undo"&&S.breedings[e.cow]&&S.breedings[e.cow].id===e.target){if(e.prev)S.breedings[e.cow]=e.prev;else delete S.breedings[e.cow]}}
+}
+function useState(st){S.offNoList=false;S.cows=st.cows||[];S.known=st.known||[];S.angus=st.angus||[];S.listDate=st.listDate||"";S.server=st.breedings||{};S.loaded=true;applyQueue();render();renderAngus()}
+function load(){
+  return call("getState",PIN,TODAY).then(st=>{S.online=true;ls.set("cache",JSON.stringify({date:TODAY,st}));$("pinGate").hidden=true;$("app").hidden=false;useState(st)})
+  .catch(e=>{if(errCode(e).includes("PIN")){showPin(true)}else{S.online=false;if(!S.loaded){S.loaded=true;S.offNoList=true}render()}});
+}
+let sending=false;
+function flush(){
+  if(sending||!queue.length)return;sending=true;const batch=queue.slice();
+  call("saveEntries",PIN,batch,TODAY).then(st=>{const ids=new Set(batch.map(e=>e.id));queue=queue.filter(e=>!ids.has(e.id));saveQueue();S.server=st.breedings||{};S.online=true;applyQueue();render()})
+  .catch(e=>{if(errCode(e).includes("PIN"))showPin(true);S.online=false;render()}).finally(()=>{sending=false});
+}
+function newId(){return Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)+"-"+(S.tech||"x")}
+
+/* ---------- render ---------- */
+function applyLang(){
+  $("langBtn").textContent=S.lang==="en"?"ES":"EN";
+  $("tab-breed").textContent=t("toBreed");$("tab-done").textContent=t("done");$("tab-office").textContent=t("office");
+  $("search").placeholder=t("find");$("addBtn").textContent=t("notOn");
+  const sb=$("sides").children;sb[0].textContent=t("north");sb[1].textContent=t("south");sb[2].textContent=t("all");
+  for(const b of sb)b.setAttribute("aria-pressed",String(b.dataset.side===S.side));
+  const fb=$("filter").children;fb[0].textContent=t("all");fb[1].textContent=t("tmai");fb[2].textContent=t("heat");
+  $("techBtn").textContent=S.tech?(TECHS.find(x=>x[0]===S.tech)||[S.tech,S.tech])[1]:t("who");
+}
+function knownInfo(id){const k=S.known.find(r=>r[0]===id);return k?{id,pen:k[1],soc:k[2],sir1:k[3],sir2:k[4]}:null}
+function metaOf(c){return [c.pen!=null?t("pen")+" "+c.pen:"",c.dim!=null?c.dim+" "+t("dim"):"",c.tbrd!=null?c.tbrd+" "+t("tb"):"",c.dslh!=null?c.dslh+" DSLH":""].filter(Boolean).join(" · ")}
+function cowRow(c,b,showDone){
+  const tag=c.type==="TMAI"?'<span class="b tmai">'+esc(t("tmai"))+'</span>':c.type==="HEAT"?'<span class="b heat">'+esc(t("heat"))+'</span>':"";
+  const soc=c.soc?'<span class="b '+(c.soc==="SX"?"sx":"an")+'">'+esc(c.soc)+'</span>':"";
+  const st=b?(b.status==="skip"?'<span class="b skip">'+esc(t("skipped"))+'</span>':'<span class="b ok">'+esc(b.sire)+' · '+esc(b.code)+'</span>')+(b.pending?'<span class="b wait">…</span>':""):"";
+  let meta=metaOf(c);
+  if(showDone&&b)meta=new Date(b.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+" · "+b.tech+(meta?" · "+meta:"");
+  return '<button class="cow" data-id="'+esc(c.id)+'"'+(b&&!showDone?' style="opacity:.55"':"")+'><div><div class="id">'+esc(c.id)+'</div><div class="meta">'+esc(meta)+'</div></div><div class="badges">'+(st||tag+soc)+'</div></button>';
+}
+function render(){
+  applyLang();
+  $("dateLbl").textContent=fmtDate(TODAY);
+  const cows=S.cows.filter(c=>onSide(c.pen));
+  const doneOnList=cows.filter(c=>S.breedings[c.id]).length;
+  $("progLbl").textContent=doneOnList+" / "+cows.length;
+  $("barFill").style.width=cows.length?(100*doneOnList/cows.length)+"%":"0";
+  const sl=$("syncLbl");
+  if(queue.length){sl.hidden=false;sl.textContent=queue.filter(e=>e.action==="save").length+" "+t("waiting")}
+  else if(!S.online){sl.hidden=false;sl.textContent=t("noSignal")}else sl.hidden=true;
+  let html="";
+  if(!S.loaded)html='<div class="empty">'+esc(t("loading"))+'</div>';
+  else if(!S.cows.length)html='<div class="empty">'+esc(t(S.offNoList?"offNoList":"noList"))+'</div>';
+  else{
+    const q=S.q.trim();
+    const list=(q?S.cows:cows).filter(c=>(S.filter==="all"||c.type===S.filter)&&(!q||c.id.includes(q)));
+    const open=list.filter(c=>!S.breedings[c.id]);
+    if(!q&&!cows.length)html='<div class="empty">'+esc(t("noSide"))+'</div>';
+    else if(!q&&!open.length&&S.filter==="all")html='<div class="empty">'+esc(t("allDone"))+'</div>';
+    if(q){for(const p of [...new Set(list.map(c=>c.pen))])html+='<div class="pen">'+esc(t("pen"))+" "+p+'</div><div class="list">'+list.filter(c=>c.pen===p).map(c=>cowRow(c,S.breedings[c.id])).join("")+'</div>'}
+    else for(const p of [...new Set(list.map(c=>c.pen))]){
+      const inPen=list.filter(c=>c.pen===p),left=inPen.filter(c=>!S.breedings[c.id]),isOpen=OPEN.has(String(p));
+      html+='<button class="penh'+(isOpen?" open":"")+(left.length?"":" clear")+'" data-pen="'+p+'" aria-expanded="'+isOpen+'"><span class="pn">'+esc(t("pen"))+" "+p+'</span><span class="pc">'+(left.length?left.length+" "+esc(t("left")):"✓ "+esc(t("doneAll")))+'</span><span class="pm">'+(isOpen?"−":"+")+'</span></button>';
+      if(isOpen&&left.length)html+='<div class="list pen-list">'+left.map(c=>cowRow(c,null)).join("")+'</div>';
+    }
+    if(q&&!show.length&&/^\d+$/.test(q)){const k=knownInfo(q);html+='<div class="empty">'+esc(k?t("onSort")+" "+t("pen")+" "+k.pen:t("notFound"))+'</div><button class="addq" id="breedQ">'+esc(t("breedX"))+" "+esc(q)+'</button>'}
+  }
+  if(!S.cows.length&&S.loaded&&S.q.trim()&&/^\d+$/.test(S.q.trim()))html+='<button class="addq" id="breedQ">'+esc(t("breedX"))+" "+esc(S.q.trim())+'</button>';
+  $("cowList").innerHTML=html;
+  if($("breedQ"))$("breedQ").onclick=()=>openCow(S.q.trim());
+  for(const h of document.querySelectorAll(".penh"))h.onclick=()=>{const p=h.dataset.pen;if(OPEN.has(p))OPEN.delete(p);else OPEN.add(p);saveOpen();render()};
+  const done=Object.values(S.breedings).sort((a,b)=>(b.at||"").localeCompare(a.at||""));
+  $("doneList").innerHTML=done.length?'<div class="list" style="margin-top:12px">'+done.map(b=>{
+    const c=S.cows.find(x=>x.id===b.cow)||{id:b.cow,pen:b.pen,soc:b.soc};return cowRow(c,b,true)}).join("")+'</div>':'<div class="empty">'+esc(t("noDone"))+'</div>';
+  for(const btn of document.querySelectorAll(".cow"))btn.onclick=()=>openCow(btn.dataset.id);
+  if(S.view==="office"&&S.officeDate===TODAY)renderOffice();
+}
+
+/* ---------- sheets ---------- */
+function closeSheet(){$("sheetRoot").hidden=true;$("sheetRoot").innerHTML=""}
+function sheet(inner){const r=$("sheetRoot");r.innerHTML='<div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true"><div class="in">'+inner+'</div></div>';r.hidden=false;r.querySelector(".scrim").onclick=closeSheet;const x=r.querySelector(".x");if(x)x.onclick=closeSheet}
+function pickTech(then){
+  sheet('<div class="sh-top"><div class="sh-id" style="font-size:2rem">'+esc(t("who"))+'</div><button class="x" aria-label="Close">×</button></div><div class="techs">'+TECHS.map(([c,n])=>'<button data-c="'+c+'">'+esc(n)+'<small>'+c+'</small></button>').join("")+'</div>');
+  for(const b of $("sheetRoot").querySelectorAll(".techs button"))b.onclick=()=>{S.tech=b.dataset.c;ls.set("tech",S.tech);closeSheet();render();if(then)then()};
+}
+function recentAngus(){const s=new Set(S.angus);Object.values(S.breedings).forEach(b=>{if(b.soc==="AN"&&b.sire&&b.status!=="skip")s.add(b.sire)});return [...s].slice(0,8)}
+function openCow(id){
+  if(!S.tech){pickTech(()=>openCow(id));return}
+  let c=S.cows.find(x=>x.id===id);const onList=!!c;
+  if(!c){const k=knownInfo(id);c=Object.assign({id,type:null,code:"H"},k||{})}
+  const prev=S.breedings[id];
+  let sire=prev&&prev.status!=="skip"?prev.sire:null, code=(prev&&prev.code)||c.code||"H";
+  if(!prev&&c.soc==="AN"){const last=Object.values(S.breedings).filter(b=>b.soc==="AN"&&b.status!=="skip"&&b.sire).sort((a,b)=>(b.at||"").localeCompare(a.at||""))[0];sire=last?last.sire:(S.angus.length===1?S.angus[0]:null)}
+  const opts=[];
+  if(c.soc==="AN")recentAngus().forEach(s=>opts.push([s,t("angusPick")]));
+  else{if(c.sir1&&c.sir1!=="BEEF")opts.push([c.sir1,"SIR1"]);if(c.sir2&&c.sir2!=="BEEF"&&c.sir2!==c.sir1)opts.push([c.sir2,"SIR2"])}
+  const meta=[metaOf(c),c.soc||""].filter(Boolean).join(" · ");
+  const warn=(!onList&&!knownInfo(id))?'<div class="warnbox">'+esc(t("notFound"))+'</div>':"";
+  sheet('<div class="sh-top"><div><div class="sh-id">'+esc(id)+'</div><div class="sh-meta">'+esc(meta)+'</div></div><button class="x" aria-label="Close">×</button></div>'+warn+
+    '<div class="lbl">'+esc(c.soc==="AN"?t("angusPick"):t("sire"))+'</div><div class="sires">'+opts.map(([s,l])=>'<button class="sire" data-s="'+esc(s)+'" aria-pressed="false"><span>'+esc(l)+'</span><b>'+esc(s)+'</b></button>').join("")+'</div>'+
+    '<input id="sireTxt" class="txt" placeholder="'+esc(t("other"))+'" autocomplete="off">'+
+    '<div class="lbl">'+esc(t("code"))+'</div><div class="codes"><button data-c="O" aria-pressed="false"><b>O</b>'+esc(t("ov"))+'</button><button data-c="H" aria-pressed="false"><b>H</b>'+esc(t("nh"))+'</button></div>'+
+    '<button class="save" id="saveBtn" disabled>'+esc(t("save"))+'</button>'+
+    (c.type!=="TMAI"?'<button class="ghost" id="skipBtn">'+esc(t("skip"))+'</button>':""));
+  const R=$("sheetRoot");
+  function sync(){R.querySelectorAll(".sire").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.s===sire)));
+    R.querySelectorAll(".codes button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c===code)));$("saveBtn").disabled=!sire}
+  R.querySelectorAll(".sire").forEach(b=>b.onclick=()=>{sire=b.dataset.s;$("sireTxt").value="";sync()});
+  $("sireTxt").oninput=e=>{sire=e.target.value.trim().toUpperCase()||null;sync()};
+  if(sire&&!opts.some(o=>o[0]===sire))$("sireTxt").value=sire;
+  R.querySelectorAll(".codes button").forEach(b=>b.onclick=()=>{code=b.dataset.c;sync()});
+  $("saveBtn").onclick=()=>record(c,onList,{status:"bred",sire,code});
+  if($("skipBtn"))$("skipBtn").onclick=()=>record(c,onList,{status:"skip",sire:"",code:""});
+  sync();
+}
+function record(c,onList,x){
+  const prev=S.breedings[c.id]||null;
+  const e={id:newId(),action:"save",date:TODAY,cow:c.id,pen:c.pen??null,soc:c.soc||"",onList,status:x.status,sire:x.sire,code:x.code,tech:S.tech,at:new Date().toISOString()};
+  queue.push(e);saveQueue();applyQueue();closeSheet();render();flush();
+  toast(c.id+" — "+(x.status==="skip"?t("skipped"):t("saved")),{label:t("undo"),fn:()=>{
+    const p=prev?Object.assign({},prev,{pending:false}):null;
+    queue.push({id:newId(),action:"undo",target:e.id,cow:c.id,date:TODAY,prev:p});saveQueue();applyQueue();render();flush()}});
+}
+function walkup(){
+  if(!S.tech){pickTech(walkup);return}
+  sheet('<div class="sh-top"><div class="sh-id" style="font-size:2rem">'+esc(t("cowNum"))+'</div><button class="x" aria-label="Close">×</button></div><input id="wIn" class="txt" inputmode="numeric" autocomplete="off" style="font-size:2rem"><div id="wInfo" class="note"></div><button class="save" id="wGo" disabled>'+esc(t("next"))+'</button>');
+  const i=$("wIn");i.focus();
+  i.oninput=()=>{const v=i.value.trim();$("wGo").disabled=!/^\d+$/.test(v);const k=knownInfo(v);$("wInfo").textContent=k?t("pen")+" "+k.pen+" · "+k.soc:(v?t("notFound"):"")};
+  $("wGo").onclick=()=>openCow(i.value.trim());
+}
+
+/* ---------- PIN ---------- */
+function showPin(wrong){
+  $("app").hidden=true;$("pinGate").hidden=false;$("pinTitle").textContent=t("pinTitle");
+  $("pinMsg").textContent=wrong&&PIN?t("wrongPin"):"";$("pinIn").value="";$("pinIn").focus();
+}
+$("pinGo").onclick=()=>{PIN=$("pinIn").value.trim();ls.set("pin",PIN);load()};
+$("pinIn").onkeydown=e=>{if(e.key==="Enter")$("pinGo").click()};
+
+/* ---------- office ---------- */
+function officeUnlock(){
+  call("officeCheck",OPIN).then(()=>{ls.set("opin",OPIN);$("officeGate").hidden=true;$("officeBody").hidden=false;watchOffice(TODAY);renderAngus()})
+  .catch(e=>{const c=errCode(e);$("officeGate").hidden=false;$("officeBody").hidden=true;
+    $("opinMsg").textContent=c.includes("NOOFFICEPIN")?"Set an Office PIN in the Settings tab of the Google Sheet first.":(OPIN?"Wrong office PIN.":"")});
+}
+$("opinGo").onclick=()=>{OPIN=$("opinIn").value.trim();officeUnlock()};
+function watchOffice(d){S.officeDate=d;$("oDate").value=d;
+  if(d===TODAY){renderOffice();return}
+  $("oTable").innerHTML='<tr><td class="note">'+esc(t("loading"))+'</td></tr>';
+  call("getDay",PIN,d).then(r=>{S.officeRows=Object.values(r.breedings||{});renderOffice()}).catch(()=>{$("oTable").innerHTML='<tr><td class="note">No signal. Try again.</td></tr>'});
+}
+function officeRows(){return (S.officeDate===TODAY?Object.values(S.breedings):S.officeRows).slice().sort((a,b)=>(a.pen??999)-(b.pen??999)||a.cow.localeCompare(b.cow))}
+function csv(){const d=fmtDate(S.officeDate);return ["Cow,Date,Sire,Code,Tech,Pen"].concat(officeRows().filter(r=>r.status!=="skip").map(r=>[r.cow,d,r.sire,r.code,r.tech,r.pen??""].join(","))).join("\n")}
+function renderOffice(){
+  const rows=officeRows();const bred=rows.filter(r=>r.status!=="skip"),skip=rows.filter(r=>r.status==="skip");
+  $("o-sum-h").textContent=bred.length+" bred, "+skip.length+" no heat — "+fmtDate(S.officeDate);
+  $("oTable").innerHTML=rows.length?"<tr><th>Cow</th><th>Pen</th><th>Sire</th><th>Code</th><th>Tech</th><th>Time</th><th></th></tr>"+rows.map(r=>"<tr><td><b>"+esc(r.cow)+"</b></td><td>"+esc(r.pen??"")+"</td><td>"+esc(r.status==="skip"?"—":r.sire)+"</td><td>"+esc(r.code)+"</td><td>"+esc(r.tech)+"</td><td>"+esc(new Date(String(r.at).replace(" ","T")).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}))+"</td><td>"+(r.status==="skip"?'<span class="b skip">NO HEAT</span>':r.onList?"":'<span class="b heat">walk-up</span>')+"</td></tr>").join(""):'<tr><td class="note">No breedings recorded for this day.</td></tr>';
+}
+function renderAngus(){$("angusRow").innerHTML=S.angus.length?S.angus.map(s=>'<button class="chip" data-s="'+esc(s)+'" title="Remove">'+esc(s)+' ×</button>').join(""):'<span class="note">None yet.</span>';
+  $("angusRow").querySelectorAll("button").forEach(b=>b.onclick=()=>saveAngus(S.angus.filter(x=>x!==b.dataset.s)))}
+function saveAngus(list){call("setAngus",OPIN,list).then(l=>{S.angus=l;renderAngus()}).catch(()=>toast("Couldn't save the sire list."))}
+function loadList(text){
+  const st=$("loadStatus");const r=parseSort(text);
+  if(!r.total){st.textContent="No cow rows found. Make sure this is the SORTLT list.";return}
+  st.textContent="Saving…";
+  call("loadList",OPIN,TODAY,r.cows,r.known).then(()=>{const tm=r.cows.filter(c=>c.type==="TMAI").length;
+    st.textContent="Loaded "+r.cows.length+" cows to breed ("+tm+" timed AI, "+(r.cows.length-tm)+" heat) from "+r.total+" on the sort list.";load()})
+  .catch(e=>{st.textContent=errCode(e).includes("OFFICE")?"Office PIN not accepted.":"Couldn't save the list. Check the signal and try again."});
+}
+
+/* ---------- wiring ---------- */
+$("langBtn").onclick=()=>{S.lang=S.lang==="en"?"es":"en";ls.set("lang",S.lang);render()};
+$("techBtn").onclick=()=>pickTech();
+const APP_URL="https://tslegers09-cloud.github.io/breedlog/";
+$("qrBtn").onclick=()=>{sheet('<div class="sh-top"><div class="sh-id" style="font-size:2rem">Breed Log app</div><button class="x" aria-label="Close">×</button></div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAN4AAADeAQAAAAB6HIMaAAAB9UlEQVR4Xu1YMW7DMBDjVQYyyj/oU+SfGfmZ/JQ8oIA8BpBxBWm5nYJOBW6I4EGOF4Lh8Xhnjpfn+Hj9DXh//JuE3cxs2peTx0kPf7IlJH3F3YENBLw9zQAkd28B/+wJgKEAxXI7+Fa2uWGf01dAtFet5Ls/FmTvufJynrCFtK82k+jbw475soKQaN0ruW1IDR0FuZLkoNxuZoZ9pWb3RfQuh5nNAZUAH6ciV3cXt+OnHk4J8Fb4p+sCoEsDupeIaN2TV29yXXoCH2rYQ3LL1sCTiLYmrz3X1Gi8Mbmlx9IQiqDytWfxHFi3NK5xWGiEHRCt5OqN9cWKyxQG2Y6qW2nA/aq15J4anS0kt3TaDvmYBHC+pha0yhgO5bFEyDym15jcSqv0W0lXOCu1EZTbKqeleocVKNhERctsQBkQ9pkW1B1iOhiBkV56ggYcVhz7RcgqU6rpYxajXM9wG7bKmLjYyAibIMc9KLfU6uhlmnapB/aLiN1BcSvRwZhpdQ/st4NM2uzZwgbysJ4Azo8yhzPrXrUWLoN9YOxqYJ9jxpFFbNRDOLRjBFPo4tTAuCh6Q/rtD31l2tebak0TxJ0DezhufzdLFIAWd2Yr9uUZcZ9ACp1b0GIox1ymzkI7tBeNx62sgJ6gpQedQVuFoJ3X3pv8f9PQN/fko/7Ai8ZaAAAAAElFTkSuQmCC" alt="QR code for the Breed Log app" style="width:min(80vw,320px);height:auto;align-self:center;background:#fff;padding:8px;border-radius:12px;image-rendering:pixelated"><div class="note" style="text-align:center">'+(S.lang==="es"?"Escanee con la cámara del teléfono para abrir la app.":"Scan with a phone camera to open the app.")+'</div><input class="txt" readonly value="'+APP_URL+'" style="text-transform:none;font-size:.8rem"><button class="btn" id="copyUrl">'+(S.lang==="es"?"Copiar enlace":"Copy link")+'</button>');$("copyUrl").onclick=()=>{try{navigator.clipboard.writeText(APP_URL).then(()=>toast("Copied"),()=>toast("Press and hold the link to copy it"))}catch(e){toast("Press and hold the link to copy it")}}};
+
+for(const b of $("sides").children)b.onclick=()=>{S.side=b.dataset.side;ls.set("side",S.side);render();window.scrollTo(0,0)};
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{S.view=b.dataset.v;document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",String(x===b)));
+  ["breed","done","office"].forEach(v=>$("view-"+v).hidden=v!==S.view);$("addBtn").hidden=S.view!=="breed";if(S.view==="office")officeUnlock()});
+$("filter").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.filter=b.dataset.f;$("filter").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));render()});
+$("search").oninput=e=>{S.q=e.target.value;render()};
+$("addBtn").onclick=walkup;
+$("oDate").onchange=e=>{if(e.target.value)watchOffice(e.target.value)};
+$("copyCsv").onclick=()=>{const text=csv();const box=$("csvBox");box.value=text;
+  if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>toast("Copied"),()=>{box.hidden=false;box.select()});else{box.hidden=false;box.select()}};
+$("pdfIn").onchange=async e=>{const f=e.target.files[0];if(!f)return;$("loadStatus").textContent="Reading PDF…";
+  try{loadList(await pdfToText(await f.arrayBuffer()))}catch(err){$("loadStatus").textContent="Couldn't read that PDF. Try pasting the text instead."}e.target.value=""};
+$("pasteGo").onclick=()=>loadList($("pasteIn").value);
+$("angusAdd").onclick=()=>{const v=$("angusIn").value.trim().toUpperCase();if(!v||S.angus.includes(v))return;$("angusIn").value="";saveAngus(S.angus.concat(v))};
+window.addEventListener("online",()=>{flush();load()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){if(today()!==TODAY){TODAY=today();S.server={};S.cows=[];S.loaded=false;OPEN=new Set()}flush();load()}});
+setInterval(()=>{if(document.hidden)return;flush();load()},30000);
+
+/* ---------- start ---------- */
+$("app").hidden=false;
+try{const c=JSON.parse(ls.get("cache")||"null");if(c&&c.date===TODAY)useState(c.st)}catch(e){}
+render();load();flush();
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+</script>
+</body>
+</html>
