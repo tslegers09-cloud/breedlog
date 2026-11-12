@@ -1,5 +1,5 @@
 // West Star Breed Log — keeps the app working with no signal.
-const CACHE = "breedlog-v2";
+const CACHE = "breedlog-v3";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {

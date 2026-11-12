@@ -36,6 +36,8 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:12px 8
 h1{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;flex:1;min-width:0}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:.9rem}
 .chip.tech{background:var(--tag);color:var(--tag-ink);border-color:var(--tag)}
+.daybtn{display:block;width:100%;margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;background:transparent;color:var(--muted);font-size:.95rem;font-weight:600;text-align:center}
+.daybtn.past{border:2px solid var(--tag);background:var(--tag);color:var(--tag-ink);font-size:1.05rem;padding:10px}
 .prog{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
@@ -130,6 +132,7 @@ textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:1
     <button class="chip tech" id="techBtn">Tech</button>
   </div>
   <div class="prog"><span id="dateLbl"></span><div class="bar"><i id="barFill"></i></div><span id="progLbl">0 / 0</span></div>
+  <button class="daybtn" id="dayBtn"></button>
   <div class="sync" id="syncLbl" hidden></div>
   <div class="sides" id="sides">
     <button data-side="N" aria-pressed="false">North</button>
@@ -214,7 +217,7 @@ const T={
    allDone:"Every cow on the list is done.",angusPick:"Angus sire",dim:"DIM",tb:"times bred",loading:"Loading…",
    breedX:"Breed cow",onSort:"Not on the breeding list, but on today's sort list —",
    waiting:"waiting to send. They will send when there is signal.",noSignal:"No signal. Breedings are saved on this phone and will send later.",
-   pinTitle:"Enter PIN",wrongPin:"Wrong PIN.",next:"Next",north:"North",south:"South",offNoList:"No signal, and today's list hasn't downloaded to this phone yet. Open the app once where there is signal. You can still add cows with “Cow not on list” — they save on the phone.",left:"left",doneAll:"done",noSide:"No cows to breed on this side today."},
+   pinTitle:"Enter PIN",wrongPin:"Wrong PIN.",next:"Next",north:"North",south:"South",offNoList:"No signal, and today's list hasn't downloaded to this phone yet. Open the app once where there is signal. You can still add cows with “Cow not on list” — they save on the phone.",left:"left",doneAll:"done",noSide:"No cows to breed on this side today.",ydayBtn:"Enter yesterday's cows",pastOn:"Entering for YESTERDAY",backToday:"tap to go back to today"},
  es:{toBreed:"Por inseminar",done:"Hechas",office:"Oficina",find:"Buscar vaca #",all:"Todas",tmai:"IATF",heat:"Celo",notOn:"+ Vaca fuera de lista",
    pen:"Corral",sire:"Toro",other:"Otro toro — escríbalo",code:"Código",ov:"Ovsynch",nh:"Celo natural",save:"Guardar",
    skip:"NO HEAT — sin celo",who:"¿Quién insemina?",skipped:"NO HEAT",undo:"Deshacer",saved:"Guardado",
@@ -223,7 +226,7 @@ const T={
    allDone:"Todas las vacas de la lista están hechas.",angusPick:"Toro Angus",dim:"DEL",tb:"servicios",loading:"Cargando…",
    breedX:"Inseminar vaca",onSort:"No está en la lista para inseminar, pero sí en la lista de hoy —",
    waiting:"pendientes de enviar. Se enviarán cuando haya señal.",noSignal:"Sin señal. Las inseminaciones se guardan en el teléfono y se enviarán después.",
-   pinTitle:"Ingrese el PIN",wrongPin:"PIN incorrecto.",next:"Siguiente",north:"Norte",south:"Sur",offNoList:"Sin señal y la lista de hoy no se ha descargado en este teléfono. Abra la app una vez donde haya señal. Puede agregar vacas con “Vaca fuera de lista” — se guardan en el teléfono.",left:"pendientes",doneAll:"listo",noSide:"No hay vacas para inseminar en este lado hoy."}
+   pinTitle:"Ingrese el PIN",wrongPin:"PIN incorrecto.",next:"Siguiente",north:"Norte",south:"Sur",offNoList:"Sin señal y la lista de hoy no se ha descargado en este teléfono. Abra la app una vez donde haya señal. Puede agregar vacas con “Vaca fuera de lista” — se guardan en el teléfono.",left:"pendientes",doneAll:"listo",noSide:"No hay vacas para inseminar en este lado hoy.",ydayBtn:"Anotar vacas de ayer",pastOn:"Anotando para AYER",backToday:"toque para volver a hoy"}
 };
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const S={lang:ls.get("lang")||"en",tech:ls.get("tech"),view:"breed",filter:"all",q:"",cows:[],known:[],angus:[],listDate:"",server:{},breedings:{},loaded:false,online:true,officeDate:null,officeRows:[]};
@@ -236,7 +239,10 @@ let queue=[];try{queue=JSON.parse(ls.get("queue")||"[]")}catch(e){queue=[]}
 const $=id=>document.getElementById(id);
 const t=k=>T[S.lang][k]||T.en[k];
 function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-let TODAY=today();
+function yday(){const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+let TODAY=today();try{const w=JSON.parse(ls.get("wd")||"null");if(w&&w.on===today()&&w.d===yday())TODAY=w.d}catch(e){}
+function wdValid(){try{const w=JSON.parse(ls.get("wd")||"null");return !!w&&w.on===today()&&w.d===TODAY&&TODAY===yday()}catch(e){return false}}
+function setWorkDate(d){TODAY=d;ls.set("wd",JSON.stringify({d,on:today()}));S.server={};S.cows=[];S.known=[];S.loaded=false;OPEN=new Set();S.view="breed";window.scrollTo(0,0);render();load()}
 function fmtDate(s){const [y,m,d]=s.split("-");return m+"/"+d+"/"+y.slice(2)}
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 const API="https://script.google.com/macros/s/AKfycbw9RB-kW93GcvYnvb2a49ZQ3G4XlEV10nBKHKa3SlPly_2EZxOiD-XHlF97H-dX44K5/exec";
@@ -310,6 +316,8 @@ function cowRow(c,b,showDone){
 function render(){
   applyLang();
   $("dateLbl").textContent=fmtDate(TODAY);
+  const db=$("dayBtn"),past=TODAY!==today();db.className="daybtn"+(past?" past":"");
+  db.textContent=past?t("pastOn")+" "+fmtDate(TODAY)+" — "+t("backToday"):t("ydayBtn")+" ("+fmtDate(yday())+")";
   const cows=S.cows.filter(c=>onSide(c.pen));
   const doneOnList=cows.filter(c=>S.breedings[c.id]).length;
   $("progLbl").textContent=doneOnList+" / "+cows.length;
@@ -408,7 +416,7 @@ $("pinIn").onkeydown=e=>{if(e.key==="Enter")$("pinGo").click()};
 
 /* ---------- office ---------- */
 function officeUnlock(){
-  call("officeCheck",OPIN).then(()=>{ls.set("opin",OPIN);$("officeGate").hidden=true;$("officeBody").hidden=false;watchOffice(TODAY);renderAngus()})
+  call("officeCheck",OPIN).then(()=>{ls.set("opin",OPIN);$("officeGate").hidden=true;$("officeBody").hidden=false;watchOffice(today());renderAngus()})
   .catch(e=>{const c=errCode(e);$("officeGate").hidden=false;$("officeBody").hidden=true;
     $("opinMsg").textContent=c.includes("NOOFFICEPIN")?"Set an Office PIN in the Settings tab of the Google Sheet first.":(OPIN?"Wrong office PIN.":"")});
 }
@@ -432,7 +440,7 @@ function loadList(text){
   const st=$("loadStatus");const r=parseSort(text);
   if(!r.total){st.textContent="No cow rows found. Make sure this is the SORTLT list.";return}
   st.textContent="Saving…";
-  call("loadList",OPIN,TODAY,r.cows,r.known).then(()=>{const tm=r.cows.filter(c=>c.type==="TMAI").length;
+  call("loadList",OPIN,today(),r.cows,r.known).then(()=>{const tm=r.cows.filter(c=>c.type==="TMAI").length;
     st.textContent="Loaded "+r.cows.length+" cows to breed ("+tm+" timed AI, "+(r.cows.length-tm)+" heat) from "+r.total+" on the sort list.";load()})
   .catch(e=>{st.textContent=errCode(e).includes("OFFICE")?"Office PIN not accepted.":"Couldn't save the list. Check the signal and try again."});
 }
@@ -440,6 +448,7 @@ function loadList(text){
 /* ---------- wiring ---------- */
 $("langBtn").onclick=()=>{S.lang=S.lang==="en"?"es":"en";ls.set("lang",S.lang);render()};
 $("techBtn").onclick=()=>pickTech();
+$("dayBtn").onclick=()=>setWorkDate(TODAY===today()?yday():today());
 const APP_URL="https://tslegers09-cloud.github.io/breedlog/";
 $("qrBtn").onclick=()=>{sheet('<div class="sh-top"><div class="sh-id" style="font-size:2rem">Breed Log app</div><button class="x" aria-label="Close">×</button></div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAN4AAADeAQAAAAB6HIMaAAAB9UlEQVR4Xu1YMW7DMBDjVQYyyj/oU+SfGfmZ/JQ8oIA8BpBxBWm5nYJOBW6I4EGOF4Lh8Xhnjpfn+Hj9DXh//JuE3cxs2peTx0kPf7IlJH3F3YENBLw9zQAkd28B/+wJgKEAxXI7+Fa2uWGf01dAtFet5Ls/FmTvufJynrCFtK82k+jbw475soKQaN0ruW1IDR0FuZLkoNxuZoZ9pWb3RfQuh5nNAZUAH6ciV3cXt+OnHk4J8Fb4p+sCoEsDupeIaN2TV29yXXoCH2rYQ3LL1sCTiLYmrz3X1Gi8Mbmlx9IQiqDytWfxHFi3NK5xWGiEHRCt5OqN9cWKyxQG2Y6qW2nA/aq15J4anS0kt3TaDvmYBHC+pha0yhgO5bFEyDym15jcSqv0W0lXOCu1EZTbKqeleocVKNhERctsQBkQ9pkW1B1iOhiBkV56ggYcVhz7RcgqU6rpYxajXM9wG7bKmLjYyAibIMc9KLfU6uhlmnapB/aLiN1BcSvRwZhpdQ/st4NM2uzZwgbysJ4Azo8yhzPrXrUWLoN9YOxqYJ9jxpFFbNRDOLRjBFPo4tTAuCh6Q/rtD31l2tebak0TxJ0DezhufzdLFIAWd2Yr9uUZcZ9ACp1b0GIox1ymzkI7tBeNx62sgJ6gpQedQVuFoJ3X3pv8f9PQN/fko/7Ai8ZaAAAAAElFTkSuQmCC" alt="QR code for the Breed Log app" style="width:min(80vw,320px);height:auto;align-self:center;background:#fff;padding:8px;border-radius:12px;image-rendering:pixelated"><div class="note" style="text-align:center">'+(S.lang==="es"?"Escanee con la cámara del teléfono para abrir la app.":"Scan with a phone camera to open the app.")+'</div><input class="txt" readonly value="'+APP_URL+'" style="text-transform:none;font-size:.8rem"><button class="btn" id="copyUrl">'+(S.lang==="es"?"Copiar enlace":"Copy link")+'</button>');$("copyUrl").onclick=()=>{try{navigator.clipboard.writeText(APP_URL).then(()=>toast("Copied"),()=>toast("Press and hold the link to copy it"))}catch(e){toast("Press and hold the link to copy it")}}};
 
@@ -457,7 +466,7 @@ $("pdfIn").onchange=async e=>{const f=e.target.files[0];if(!f)return;$("loadStat
 $("pasteGo").onclick=()=>loadList($("pasteIn").value);
 $("angusAdd").onclick=()=>{const v=$("angusIn").value.trim().toUpperCase();if(!v||S.angus.includes(v))return;$("angusIn").value="";saveAngus(S.angus.concat(v))};
 window.addEventListener("online",()=>{flush();load()});
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){if(today()!==TODAY){TODAY=today();S.server={};S.cows=[];S.loaded=false;OPEN=new Set()}flush();load()}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){if(TODAY!==today()&&!wdValid()){TODAY=today();S.server={};S.cows=[];S.loaded=false;OPEN=new Set()}flush();load()}});
 setInterval(()=>{if(document.hidden)return;flush();load()},30000);
 
 /* ---------- start ---------- */
